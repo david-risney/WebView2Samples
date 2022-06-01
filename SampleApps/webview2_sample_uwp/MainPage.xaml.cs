@@ -8,6 +8,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.Web.WebView2.Core;
 using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
@@ -25,6 +26,57 @@ namespace webview2_sample_uwp
             WebView2.NavigationCompleted += WebView2_NavigationCompleted;
 
             StatusUpdate("Ready");
+
+            InitializeCoreWebView2Async();
+        }
+
+        public async Task<CoreWebView2> EnsureCoreWebView2Async()
+        {
+            await WebView2.EnsureCoreWebView2Async();
+            return WebView2.CoreWebView2;
+        }
+
+        private async void InitializeCoreWebView2Async()
+        {
+            await WebView2.EnsureCoreWebView2Async();
+            WebView2.CoreWebView2.NewWindowRequested += CoreWebView2_NewWindowRequested;
+        }
+
+        private async  void CoreWebView2_NewWindowRequested(CoreWebView2 sender, CoreWebView2NewWindowRequestedEventArgs args)
+        {
+            Console.WriteLine("NewWindowRequested");
+
+            switch (NewWindowBehaviorComboBox.SelectedIndex)
+            {
+                // Open mini browser window
+                case 0:
+                    // Default behavior. No change to args required.
+                    break;
+
+                // Send to default browser 
+                case 1:
+                    args.Handled = true;
+                    // No need to wait for the launcher to finish sending the URI to the browser
+                    // before we allow the WebView2 in our app to continue.
+                    _ = Windows.System.Launcher.LaunchUriAsync(new Uri(args.Uri));
+                    break;
+
+                // Navigate in same WebView2
+                case 2:
+                    args.Handled = true;
+                    args.NewWindow = sender;
+                    break;
+
+                // Open in different WebView2
+                case 3:
+                    args.Handled = true;
+                    using (args.GetDeferral())
+                    {
+                        await WebView2Right.EnsureCoreWebView2Async();
+                        args.NewWindow = WebView2Right.CoreWebView2;
+                    }
+                    break;
+            }
         }
 
         private void StatusUpdate(string message)
