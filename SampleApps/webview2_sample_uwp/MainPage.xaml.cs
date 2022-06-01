@@ -76,6 +76,11 @@ namespace webview2_sample_uwp
                         args.NewWindow = WebView2Right.CoreWebView2;
                     }
                     break;
+
+                // Ignore
+                case 4:
+                    args.Handled = true;
+                    break;
             }
         }
 

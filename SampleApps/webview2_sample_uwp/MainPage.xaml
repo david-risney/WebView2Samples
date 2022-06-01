@@ -36,7 +36,8 @@ found in the LICENSE file.-->
                 <ComboBoxItem>Open mini browser window</ComboBoxItem>
                 <ComboBoxItem>Send to default browser</ComboBoxItem>
                 <ComboBoxItem>Navigate in same WebView2</ComboBoxItem>
-                <ComboBoxItem>Open new window</ComboBoxItem>
+                <ComboBoxItem>Open in new WebView2</ComboBoxItem>
+                <ComboBoxItem>Ignore</ComboBoxItem>
             </ComboBox>
         </Grid>
 
