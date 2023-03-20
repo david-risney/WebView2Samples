@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+using Microsoft.Gaming.XboxGameBar;
 using System;
 using WebView2_UWP;
 using WebView2_UWP.Pages;
@@ -106,6 +107,7 @@ namespace webview2_sample_uwp
         private void OnSuspending(object sender, SuspendingEventArgs e)
         {
             var deferral = e.SuspendingOperation.GetDeferral();
+            _widget = null;
             //TODO: Save application state and stop any background activity
             deferral.Complete();
         }
@@ -121,5 +123,53 @@ namespace webview2_sample_uwp
 
             ApplicationView.GetForCurrentView().Title = title;
         }
+
+        protected override void OnActivated(IActivatedEventArgs args)
+        {
+            XboxGameBarWidgetActivatedEventArgs widgetArgs = null;
+            if (args.Kind == ActivationKind.Protocol)
+            {
+                var protocolArgs = args as IProtocolActivatedEventArgs;
+                if (protocolArgs != null)
+                {
+                    if (protocolArgs.Uri.Scheme.Equals("ms-gamebarwidget"))
+                    {
+                        // This is a Game Bar Widget activation
+                        widgetArgs = args as XboxGameBarWidgetActivatedEventArgs;
+                    }
+                }
+            }
+
+            if (widgetArgs != null)
+            {
+                if (widgetArgs.IsLaunchActivation)
+                {
+                    // Create your Frame and set the current Window's contents to it
+                    Frame rootFrame = new Frame();
+                    // Setup navigation failure event handler
+                    rootFrame.NavigationFailed += OnNavigationFailed;
+                    Window.Current.Content = rootFrame;
+                    // Instantiate the XboxGameBarWidget object with your args object, core window, and frame. The XboxGameBarWidget object must be held for the lifetime of your App object (App class member works fine).
+                    _widget = new XboxGameBarWidget(widgetArgs, Window.Current.CoreWindow, rootFrame);
+
+                    rootFrame.Navigate(typeof(MainPage), widgetArgs);
+                    Window.Current.Closed += Current_Closed;
+
+                    Window.Current.Activate();
+                }
+                else
+                {
+                    // Repeat activation for this widget. Ignore
+                }
+            }
+        }
+
+        private void Current_Closed(object sender, Windows.UI.Core.CoreWindowEventArgs e)
+        {
+            _widget = null;
+            Window.Current.Closed -= Current_Closed;
+        }
+        private XboxGameBarWidget _widget = null;
+
     }
 }
